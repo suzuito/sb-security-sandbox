@@ -30,7 +30,7 @@ Servlet containerにより作られる。
 リクエストは、FilterChainの中にあるFilterの配列の要素を順番に通ってゆく。やがてServletに到達する。
 Servletがクライアントへレスポンスを返す。当然、いずれかのFilterでフィルタされてしまうこともある。
 
-![](https://docs.spring.io/spring-security/reference/_images/servlet/architecture/filterchain.png)
+![](IMG_0399.jpg)
 
 ここまでの処理は、Spring BootではなくServletが実行する。
 
