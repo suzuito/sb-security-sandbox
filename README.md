@@ -35,10 +35,7 @@ Servletがクライアントへレスポンスを返す。当然、いずれか�
 #### FilterChain中のDelegatingFilterProxy -> FilterChainProxy (Servletがリクエストを処理するメカニズム)
 
 処理をServletからSpringBootへ移譲するためのFilterが、DelegatingFilterProxyだ。
-
-DelegatingFilterProxyはFilterChainが持つFilter配列の要素となっている。
-
-その後、処理はDelegatingFilterProxyからFilterChainProxyへ移譲される。この辺りのフローはようわからんかった。
+この辺りの詳細なフローは、ソースコードを読んでもようわからんかった。
 
 #### FilterChainProxyの処理 (Spring Securityがリクエストを処理するメカニズム)
 
@@ -53,6 +50,11 @@ FilterChainProxyは、リクエストパスなどを入力として、リクエ�
 
 ![](IMG_0399.jpg)
 
-## Security Filter Chainの作り方
+## Security Filter Chainの作り方を理解せよ
 
 「アーキテクチャ」で述べた通り、SecurityFilterChainがフィルタ処理を担う。
+要は、SecurityFilterChainの作り方を理解することができれば、Spring Securityをある程度使いこなせるようになる。
+
+慣例では、Java ConfigによりSecurityFilterChainを作るっぽい。本サンプルコードでは、以下で作ってる。
+
+[com.example.sbsecuritysandbox.SecurityConfiguration](./src/main/kotlin/com.example.sbsecuritysandbox/SecurityConfiguration.kt)
