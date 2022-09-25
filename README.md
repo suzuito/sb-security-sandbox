@@ -30,8 +30,6 @@ Servlet containerにより作られる。
 リクエストは、FilterChainの中にあるFilterの配列の要素を順番に通ってゆく。やがてServletに到達する。
 Servletがクライアントへレスポンスを返す。当然、いずれかのFilterでフィルタされてしまうこともある。
 
-![](IMG_0399.jpg)
-
 ここまでの処理は、Spring BootではなくServletが実行する。
 
 #### FilterChain中のDelegatingFilterProxy -> FilterChainProxy (Servletがリクエストを処理するメカニズム)
@@ -50,6 +48,10 @@ SecurityFilterChainはFilterの配列を持つ（ここでやっと登場、Filt
 
 FilterChainProxyは、リクエストパスなどを入力として、リクエストをどのSecurityFilterChainへ送るか判定する。
 リクエストが送られるSecurityFilterChainは１つだけ。複数には送られない。
+
+### 図にするとこんな感じか？
+
+![](IMG_0399.jpg)
 
 ## Security Filter Chainの作り方
 
