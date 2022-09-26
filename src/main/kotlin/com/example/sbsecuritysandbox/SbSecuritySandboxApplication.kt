@@ -3,13 +3,17 @@ package com.example.sbsecuritysandbox
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.security.core.Authentication
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import java.security.Principal
 
 @Controller
-class Page {
+class Page(
+    val authorizedClientService: OAuth2AuthorizedClientService,
+) {
     @GetMapping("/")
     fun getIndex(
         // principalはSpring Securityの認証情報を保持する。
@@ -28,6 +32,16 @@ class Page {
             }
             println("detail is ${auth.details}")
             println("isAuth is ${auth.isAuthenticated}")
+            // OAuth2ログインユーザーの情報を取得する
+            // OAuth2AuthorizedClientServiceがOAuth2認証に関連する諸々の情報を永続化している。
+            // もちろん永続化先は変更可能。デフォルトではインメモリーに永続化する。
+            // principalからその情報を引き当てることができる。
+            val authClient: OAuth2AuthorizedClient? = authorizedClientService.loadAuthorizedClient("github", auth.name)
+            // OAuth2ログインではないユーザーの場合、nullとなる
+            if (authClient != null) {
+                println("OAuth2 ac ${authClient.accessToken.tokenValue}")
+                println("OAuth2 client name ${authClient.clientRegistration.clientName}")
+            }
         } else {
             model.addAttribute("username", "ななし")
         }

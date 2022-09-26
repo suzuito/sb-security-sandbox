@@ -30,6 +30,10 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     // Thymeleafテンプレートの中で認証情報を扱えるようになるライブラリ
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity5")
+    // Spring Security OAuth2を利用するためのライブラリ
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    // Spring Sessionで必要となるライブラリ
+    implementation("org.springframework.session:spring-session-jdbc:2.7.0")
 }
 
 tasks.withType<KotlinCompile> {

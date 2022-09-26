@@ -2,13 +2,23 @@ package com.example.sbsecuritysandbox
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.jdbc.core.JdbcOperations
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.oauth2.client.JdbcOAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User
+import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.provisioning.JdbcUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 import javax.sql.DataSource
@@ -44,6 +54,12 @@ class SecurityConfiguration {
         // カスタムなログインページを指定しない場合は、Spring Securityが提供するデフォルトのログインページとなる。
         // ログインページのパスは /login
         hs.formLogin()
+        // OAuth2LoginAuthenticationFilterの設定
+        hs.oauth2Login()
+            // UserInfoEndpoint（OAuth2のユーザー情報取得用エンドポイント）から取得可能な情報を用いる
+            .userInfoEndpoint()
+            // OAuth2のユーザー情報をちょっとだけ書き換える
+            .userService(customUserService())
         // LogoutFilterの設定
         hs.logout()
             .logoutSuccessUrl("/")
@@ -53,6 +69,33 @@ class SecurityConfiguration {
             println(v.javaClass.name)
         }
         return returned
+    }
+
+    private fun customUserService(): OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+        // OAuth2のUser情報を取得するためのサービス
+        // デフォルトがDefaultOAuth2UserService。
+        val delegate = DefaultOAuth2UserService()
+        return OAuth2UserService { userRequest ->
+            // OAuth2ユーザー情報提供エンドポイントからユーザー情報を取得する。
+            val user = delegate.loadUser(userRequest)
+            // 取得されたユーザー情報を書き換える。
+            println("==== OAuth2ユーザー情報を書き換える前 ====")
+            println("name=${user.name}")
+            println("attrs=${user.attributes}")
+            println("auths=${user.authorities}")
+            // デフォルトを移譲する形で、ユーザー情報を書き換える。
+            val newAuthorities = HashSet(user.authorities)
+            newAuthorities.clear()
+            newAuthorities.add(SimpleGrantedAuthority("ROLE_USER"))
+            val newAttributes = HashMap(user.attributes)
+            // idを新しくする
+            newAttributes["__overwritten_id"] = "${userRequest.clientRegistration.clientName}-${user.name}"
+            DefaultOAuth2User(
+                newAuthorities,
+                newAttributes,
+                "__overwritten_id",
+            )
+        }
     }
 
     // DaoAuthenticationProviderで使われるUserDetailsServiceのBean。
@@ -78,6 +121,20 @@ class SecurityConfiguration {
             userDetailsService.createUser(defaultUser)
         }
         return userDetailsService
+    }
+
+    // Spring SecurityのOAuth2認証情報（プロバイダーから提供される諸々の情報。アクセストークンとかetc）を
+    // JDBCにより永続化するためのBean
+    // Spring Securityでは、デフォルトでは、認証情報をインメモリーへ保存する。
+    @Bean
+    fun a(
+        jdbcOperations: JdbcOperations,
+        clientRegistrationRepository: ClientRegistrationRepository,
+    ): OAuth2AuthorizedClientService {
+        return JdbcOAuth2AuthorizedClientService(
+            jdbcOperations,
+            clientRegistrationRepository,
+        )
     }
 
     @Bean

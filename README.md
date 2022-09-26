@@ -58,3 +58,32 @@ FilterChainProxyは、リクエストパスなどを入力として、リクエ�
 慣例では、Java ConfigによりSecurityFilterChainを作るっぽい。本サンプルコードでは、以下で作ってる。
 
 [com.example.sbsecuritysandbox.SecurityConfiguration](./src/main/kotlin/com.example.sbsecuritysandbox/SecurityConfiguration.kt)
+
+## SecurityContext（セッション情報）をどこへ永続化しているのか
+
+https://docs.spring.io/spring-security/reference/servlet/authentication/persistence.html
+
+当たり前だが、Spring SecurityはSecurity Context（要はセッション情報）を永続化する。ユーザーがパスワードログインした後、Spring
+BootはそのSecurityContextをどこかへ永続化しているわけだ。
+
+どこへ永続化しているのだろうか？を調べてみよう。
+
+まず、[SecurityContextRepository](https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/context/SecurityContextRepository.html)
+がSecurityContextを永続化するとのこと。3つのSecurityContextRepository実装が提供されている（詳しい話は[こちら](https://docs.spring.io/spring-security/reference/servlet/authentication/persistence.html#securitycontextrepository)
+）。
+SecurityContextRepositoryのデフォルト実装は[HttpSecurityContextRepository](https://docs.spring.io/spring-security/site/docs/5.7.3/api/org/springframework/security/web/context/HttpSessionSecurityContextRepository.html)
+。
+このレポジトリはSecurityContextを[HttpSession](https://docs.oracle.com/javaee/7/api/javax/servlet/http/HttpSession.html)
+として扱う。
+
+HttpSessionはSpring Sessionモジュールにより扱われる。
+Spring SessionモジュールはHttpSessionを様々な方法で扱うための方法を提供する。
+HttpSessionを、JDBCにより永続化する方法は[こちら](https://docs.spring.io/spring-session/reference/guides/boot-jdbc.html)に書かれている。
+
+要は、「SecurityContextを永続化する」とは「HttpSessionを永続化する」ことに他ならない。
+
+## サンプルの動かし方
+
+```shell
+./gradlew bootRun
+```
